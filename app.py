@@ -36,16 +36,17 @@ def contacto():
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
+    username = os.environ.get("ADMIN_USERNAME")
     password = os.environ.get("ADMIN_PASSWORD")
-    if not password:
-        return "Configura ADMIN_PASSWORD en Render antes de abrir esta página.", 503
+    if not username or not password:
+        return "Configura ADMIN_USERNAME y ADMIN_PASSWORD en Render antes de abrir esta página.", 503
     if request.method == "POST":
-        if request.form.get("password") == password:
+        if request.form.get("username", "").strip() == username and request.form.get("password") == password:
             session["admin"] = True
             return redirect("/admin")
         return "Contraseña incorrecta. <a href='/admin'>Intentar otra vez</a>", 401
     if not session.get("admin"):
-        return '''<!doctype html><title>Starlights Admin</title><style>body{background:#071424;color:#eef8fc;font:16px Arial;padding:50px}form{max-width:340px;display:grid;gap:12px}input,button{padding:12px}button{background:#82e9f3;border:0;cursor:pointer}</style><h1>Starlights · Mensajes</h1><form method="post"><input type="password" name="password" placeholder="Contraseña" required><button>Entrar</button></form>'''
+        return '''<!doctype html><title>Starlights Admin</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle,#155777 0,#071424 65%);color:#eef8fc;font:16px Arial}.box{width:min(360px,calc(100% - 40px));padding:36px;background:#0c2943;border:1px solid #34718a;text-align:center}.logo{color:#82e9f3;font-weight:bold;letter-spacing:2px}.box h1{font:31px Georgia,serif;margin:18px 0 8px}.box p{color:#b9d6e7;font-size:14px}.box form{display:grid;gap:12px;margin-top:25px}.box input,.box button{padding:13px;border:0;font:15px Arial}.box input{background:#061827;color:white;border:1px solid #4b91a8}.box button{background:#82e9f3;color:#062039;font-weight:bold;cursor:pointer}</style><main class="box"><div class="logo">✦ STARLIGHTS</div><h1>Panel privado</h1><p>Acceso a mensajes recibidos</p><form method="post"><input name="username" placeholder="Nombre de usuario" required autocomplete="username"><input type="password" name="password" placeholder="Contraseña" required autocomplete="current-password"><button>Entrar</button></form></main>'''
     db = database()
     rows = db.execute("SELECT nombre, correo, mensaje, fecha FROM mensajes ORDER BY fecha DESC").fetchall()
     db.close()
